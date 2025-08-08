@@ -6,7 +6,7 @@
 /*   By: barmarti <barmarti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/01 12:07:21 by cscache           #+#    #+#             */
-/*   Updated: 2025/08/06 18:52:07 by barmarti         ###   ########.fr       */
+/*   Updated: 2025/08/08 12:25:39 by barmarti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,7 +41,10 @@ void	create_args_lst(char *name, t_cmd *cmd)
 		return ;
 	new_arg->content = ft_strdup(name);
 	if (!new_arg->content)
+	{
+		free(new_arg);
 		return ;
+	}
 	new_arg->next = NULL;
 	ft_lstadd_back(&cmd->tmp_args, new_arg);
 }
@@ -101,15 +104,18 @@ static t_cmd	*parse_cmd_name(t_shell *shell, char *cmd_name)
 
 	(void)shell;
 	new = (t_cmd *)malloc(sizeof(t_cmd));
-	new->tmp_args = malloc(sizeof(t_list *));
 	if (!new)
 		return (NULL);
+	ft_bzero(new, sizeof(t_cmd));
 	new->name = ft_strdup(cmd_name);
 	if (!new->name)
 	{
 		free(new);
 		return (NULL);
 	}
+	new->tmp_args = NULL;
+	new->next = NULL;
+	new->prev = NULL;
 	return (new);
 }
 
@@ -127,6 +133,10 @@ static t_ast	*create_pipe_node(t_ast *left, t_ast *right)
 	return (new);
 }
 
+/* 
+-	Decoupe avec ini_node puis recupere data en fonction du TOKEN_TYPE 
+-	Recupere data -> to_exp
+*/
 t_ast	*create_ast_node(t_shell *shell, t_token **lst_tokens)
 {
 	t_token	*current;
@@ -135,6 +145,12 @@ t_ast	*create_ast_node(t_shell *shell, t_token **lst_tokens)
 
 	first = true;
 	new = malloc(sizeof(t_ast));
+	if (!new)
+		return (NULL);
+	new->node_type = NODE_CMD;
+	new->cmds = NULL;
+	new->left = NULL;
+	new->right = NULL;
 	current = *lst_tokens;
 	while (current && current->type != TOKEN_PIPE)
 	{
@@ -147,28 +163,28 @@ t_ast	*create_ast_node(t_shell *shell, t_token **lst_tokens)
 			create_args_lst(current->value, new->cmds);
 		current = current->next;
 	}
-	if (new->cmds->tmp_args)
+	if (new->cmds && new->cmds->tmp_args)
 		new->cmds->args = convert_list_args_to_array(new->cmds);
+	*lst_tokens = current;
 	return (new);
 }
 
+/* Attention redir en debut de read line */
 t_ast	*set_ast(t_shell *shell, t_token *lst_tokens)
 {
-	t_token	*current;
 	t_ast	*left;
 	t_ast	*new_pipe;
 	t_ast	*right;
 
-
 	left = create_ast_node(shell, &lst_tokens);
-	current = find_pipe(lst_tokens);
-	while (current && is_pipe(current))
+	while (lst_tokens && is_pipe(lst_tokens))
 	{
-		current = current->next;
+		lst_tokens = lst_tokens->next;
 		right = create_ast_node(shell, &lst_tokens);
 		new_pipe = create_pipe_node(left, right);
 		left = new_pipe;
 	}
-	shell->ast = *left;
+	if (left)
+		shell->ast = *left;
 	return (left);
 }

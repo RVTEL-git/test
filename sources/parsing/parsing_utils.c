@@ -6,7 +6,7 @@
 /*   By: barmarti <barmarti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/06 17:01:17 by barmarti          #+#    #+#             */
-/*   Updated: 2025/08/06 17:44:10 by barmarti         ###   ########.fr       */
+/*   Updated: 2025/08/07 18:07:52 by barmarti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,7 +39,7 @@ t_token	*find_pipe(t_token *lst_token)
 	current = lst_token;
 	while (current && current->type != TOKEN_PIPE)
 		current = current->next;
-	if (current->type == TOKEN_PIPE)
+	if (current && current->type == TOKEN_PIPE)
 		return (current);
 	else
 		return (NULL);

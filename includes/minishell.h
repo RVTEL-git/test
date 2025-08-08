@@ -6,7 +6,7 @@
 /*   By: barmarti <barmarti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/25 17:00:27 by cscache           #+#    #+#             */
-/*   Updated: 2025/08/06 18:02:47 by barmarti         ###   ########.fr       */
+/*   Updated: 2025/08/08 18:43:00 by barmarti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -73,7 +73,7 @@ typedef struct s_env
 {
 	char			*key;
 	char			*value;
-	struct t_env	*next;
+	struct s_env	*next;
 }	t_env;
 
 /*=============== PARSING =============== */
@@ -87,7 +87,7 @@ typedef enum e_node_type
 typedef struct s_cmd
 {
 	char			*name;
-	t_list			*tmp_args;
+	t_list			*tmp_args; // Passer en args tout court pour "to_exp" ou alors recupere directement la valeur dans env
 	char			**args;
 	char			*abs_path;
 	int				fd_in;
@@ -109,6 +109,11 @@ typedef struct s_ast
 
 /*=============== EXEC =============== */
 
+/*
+- Peut-etre plus facile d'utilise des pointeur pour :
+	- tokens -> liste chaine donc pointe vers une suite de variable
+	- ast -> idem
+*/
 typedef struct s_shell
 {
 	t_lexer	lexer;
@@ -121,6 +126,9 @@ typedef struct s_shell
 
 /*=============== FUNCTIONS =============== */
 
+t_env			*get_env(char **envp);
+
+/*-------STRUCT-------*/
 void			init_all_structs(t_shell *shell);
 
 t_token			*ft_lexer(char *input, t_shell *shell);
@@ -135,10 +143,16 @@ void			clear_tokens_lst(t_token **lst);
 t_token_type	determine_token_type(t_lexer *lexer);
 
 int				get_syntax_error_status(t_token *lst_tokens);
+
 /*-------AST-------*/
 t_ast			*set_ast(t_shell *shell, t_token *lst_tokens);
 void			free_args(char **result, int i);
 bool			is_pipe(t_token *lst_token);
 t_token			*find_pipe(t_token *lst_token);
+
+/*-------Display|TEST-------*/
+void	display_lexer_results(t_token *lst_tokens);
+void	display_ast_results(t_ast *node, int depth, char branch);
+void	display_env(t_env *env);
 
 #endif
